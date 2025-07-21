@@ -1,73 +1,50 @@
 package edu.todo.model;
 
+import javafx.beans.property.*;
 import java.time.LocalDate;
 import java.util.Objects;
 
-/**
- * Represents a single to-do item.
- */
+/** Plain domain object with JavaFX‑friendly properties. */
 public class Task {
 
-    private final int id;
-    private String title;
-    private LocalDate dueDate;
-    private boolean completed;
+    /* immutable id */                private final int id;
+    /* observable   */                private final StringProperty  description =
+                                                 new SimpleStringProperty();
+    /* simple date  */                private       LocalDate       dueDate;
+    /* observable   */                private final BooleanProperty completed   =
+                                                 new SimpleBooleanProperty(false);
 
-    public Task(int id, String title, LocalDate dueDate) {
+    public Task(int id, String desc, LocalDate due) {
         this.id = id;
-        this.setTitle(title);
-        this.setDueDate(dueDate);
-        this.completed = false;
+        setDescription(desc);
+        this.dueDate = due;
     }
 
-    /* ---------------- getters / setters ---------------- */
+    /* ---- JavaFX getters / setters ---- */
 
-    public int getId() {
-        return id;
-    }
+    public int            getId()              { return id; }
 
-    public String getTitle() {
-        return title;
-    }
-    public void setTitle(String title) {
-        if (title == null || title.isBlank()) {
-            throw new IllegalArgumentException("Title must be non-empty");
-        }
-        this.title = title.trim();
-    }
+    public String         getDescription()     { return description.get(); }
+    public void           setDescription(String d){ description.set(d.trim()); }
+    public StringProperty descriptionProperty(){ return description; }
 
-    public LocalDate getDueDate() {
-        return dueDate;
-    }
-    public void setDueDate(LocalDate dueDate) {
-        if (dueDate == null) {
-            throw new IllegalArgumentException("Due date required");
-        }
-        this.dueDate = dueDate;
-    }
+    public LocalDate      getDueDate()         { return dueDate; }
+    public void           setDueDate(LocalDate d){ dueDate = d; }
 
-    public boolean isCompleted() {
-        return completed;
-    }
-    public void setCompleted(boolean completed) {
-        this.completed = completed;
-    }
+    public boolean        isCompleted()        { return completed.get(); }
+    public void           setCompleted(boolean v){ completed.set(v); }
+    public BooleanProperty completedProperty() { return completed; }
 
-    /* ---------------- business helpers ---------------- */
-
-    /** Simple domain check: title present & due date today or in future. */
+    /* ---- basic rule ---- */
     public boolean validate() {
-        return !title.isBlank() && !dueDate.isBefore(LocalDate.now());
+        return !getDescription().isBlank()
+               && !dueDate.isBefore(LocalDate.now());
     }
 
     @Override public String toString() {
-        return "%d,%s,%s,%b".formatted(id, title, dueDate, completed);
+        return "%d,%s,%s,%b".formatted(id, getDescription(), dueDate, isCompleted());
     }
 
-    @Override public boolean equals(Object o) {
-        return (o instanceof Task t) && t.id == id;
-    }
-    @Override public int hashCode() {
-        return Objects.hash(id);
-    }
+    @Override public boolean equals(Object o) { return o instanceof Task t && t.id == id; }
+    @Override public int hashCode()           { return Objects.hash(id); }
 }

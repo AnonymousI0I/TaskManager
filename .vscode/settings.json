@@ -1,16 +1,27 @@
 {
+  // IntelliSense / on‑save compile class‑path
   "java.project.referencedLibraries": [
     "${workspaceFolder}/javafx-sdk-21.0.2/lib/*.jar"
   ],
 
-  "java.debug.settings.vmArgs":
-    "-XstartOnFirstThread --enable-native-access=ALL-UNNAMED -Dprism.order=sw --module-path javafx-sdk-21.0.2/lib --add-modules javafx.controls,javafx.fxml",
+  // Where VS Code’s Java plugin should put class files
+  "java.project.outputPath": "out",
 
+  // Source roots (leave as the top‑level src folder)
+  "java.project.sourcePaths": [
+    "src/main/java"
+  ],
+
+  /* -------- VM args -------- */
+
+  // Used when you press **Debug ▷**
+  "java.debug.settings.vmArgs":
+    "--module-path ${workspaceFolder}/out:${workspaceFolder}/javafx-sdk-21.0.2/lib " +
+    "--add-modules javafx.controls,javafx.fxml",
+
+  // Used when you press the plain **Run ▷**
   "java.debug.settings.runArgs": [
-    "-XstartOnFirstThread",
-    "--enable-native-access=ALL-UNNAMED",
-    "-Dprism.order=sw",
-    "--module-path", "javafx-sdk-21.0.2/lib",
+    "--module-path", "${workspaceFolder}/out:${workspaceFolder}/javafx-sdk-21.0.2/lib",
     "--add-modules", "javafx.controls,javafx.fxml"
   ]
 }

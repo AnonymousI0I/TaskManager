@@ -1,62 +1,45 @@
 package edu.todo.model;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.Comparator;
+import java.util.concurrent.atomic.AtomicInteger;
 
-/**
- * A concrete task list with persistence & capacity limits.
- */
+/** Very small, in‑memory list that limits the number of tasks. */
 public class TaskList extends AbstractTaskCollection {
 
-    private final Path storagePath;
     private final int capacity;
-    private final Comparator<Task> sorter;
+    private final Comparator<Task> order;
+    private final AtomicInteger idSeq = new AtomicInteger(1);
 
-    public TaskList(String ownerName,
-                    Path storagePath,
-                    int capacity,
-                    Comparator<Task> sorter) {
+    /* real constructor -------------------------------------------------- */
+    public TaskList(String ownerName, int capacity,
+                    Comparator<Task> ordering) {
         super(ownerName);
-        this.storagePath = storagePath;
         this.capacity = capacity;
-        this.sorter = sorter;
+        this.order    = ordering;
     }
 
-    /* -------- extended behaviours -------- */
-
-    @Override public void addTask(Task t) {
-        if (size() >= capacity) {
-            throw new IllegalStateException("List at capacity");
-        }
-        super.addTask(t);
-        tasks.sort(sorter);
+    /* convenience no‑arg ctor used by the GUI --------------------------- */
+    public TaskList() {
+        this(System.getProperty("user.name"),   // owner
+             100,                               // max 100 tasks
+             Comparator.comparing(Task::getId));
     }
 
-    /** Save as CSV: id,title,dueDate,completed */
-    public void save() throws IOException {
-        try (BufferedWriter out = Files.newBufferedWriter(storagePath)) {
-            for (Task t : tasks) out.write(t + System.lineSeparator());
-        }
+    /* ------------ “rich” helpers the GUI calls ------------------------ */
+
+    /** Add quickly from a description. */
+    public void add(String desc) {
+        if (size() >= capacity)
+            throw new IllegalStateException("Too many tasks (capacity " + capacity + ")");
+        addTask(new Task(nextId(), desc, LocalDate.now().plusDays(7)));
+        tasks.sort(order);
     }
 
-    /** Load and replace current contents. */
-    public void load() throws IOException {
-        tasks.clear();
-        try (BufferedReader in = Files.newBufferedReader(storagePath)) {
-            in.lines().forEach(this::parseAndAdd);
-        }
-        tasks.sort(sorter);
+    /** Gives a *mutable* list – internal use only. */
+    public java.util.List<Task> getAll() {
+        return tasks;
     }
 
-    private void parseAndAdd(String line) {
-        String[] p = line.split(",", 4);
-        Task t = new Task(Integer.parseInt(p[0]), p[1],
-                          java.time.LocalDate.parse(p[2]));
-        t.setCompleted(Boolean.parseBoolean(p[3]));
-        tasks.add(t);
-    }
+    /* private */ int nextId() { return idSeq.getAndIncrement(); }
 }
